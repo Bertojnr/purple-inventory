@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import Toast from "../components/Toast";
+import manage from "../assets/manage.jpg";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -30,41 +31,61 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-purple-900 px-4">
-      <div className="w-full max-w-md bg-red-800 rounded-2xl shadow-lg p-6">
-        <h1 className="text-2xl font-bold text-center text-white mb-6">
-          Purple Inventory
-        </h1>
+   <div className="flex min-h-screen bg-gray-100 flex-col md:flex-row">
+  {/* Illustration */}
+  <div className="flex-1 flex items-center justify-center bg-gray-200 p-4">
+    <img
+      src={manage}
+      alt="Inventory Illustration"
+      className="max-w-full max-h-96 md:max-h-full object-contain"
+    />
+  </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <Input
-            label="Email"
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+  {/* Login Form */}
+  <div className="flex-1 flex items-center justify-center p-6">
+    <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
+      <h1 className="text-3xl font-extrabold text-center text-purple-900 mb-6">
+        Purple Inventory
+      </h1>
 
-          <Input
-            label="Password"
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <Button type="submit">Login</Button>
-        </form>
-      </div>
-
-      {toast.show && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast({ show: false, type: "", message: "" })}
+      <form onSubmit={handleLogin} className="space-y-4">
+        <Input
+          label="Email"
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="border-purple-300 focus:border-purple-500 focus:ring focus:ring-purple-200"
         />
-      )}
+
+        <Input
+          label="Password"
+          type="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="border-purple-300 focus:border-purple-500 focus:ring focus:ring-purple-200"
+        />
+
+        <Button
+          type="submit"
+          className="w-full bg-purple-700 hover:bg-purple-800 text-white font-semibold py-3 rounded-xl transition-all duration-300"
+        >
+          Login
+        </Button>
+      </form>
     </div>
+  </div>
+
+  {toast.show && (
+    <Toast
+      type={toast.type}
+      message={toast.message}
+      onClose={() => setToast({ show: false, type: "", message: "" })}
+    />
+  )}
+</div>
+
   );
 };
 

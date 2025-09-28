@@ -1,9 +1,9 @@
-// src/pages/Transactions.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getTransactions, deleteTransaction } from "../utils/transactionApi";
+import { getProducts } from "../utils/productApi";
 import Table from "../components/Table";
 import Toast from "../components/Toast";
-import { getTransactions, deleteTransaction } from "../utils/api"; // We'll create mock APIs
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -11,40 +11,77 @@ export default function Transactions() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getTransactions();
-        setTransactions(data);
-      } catch (error) {
+        const [transactionRes, productRes] = await Promise.all([
+          getTransactions(),
+          getProducts(),
+        ]);
+
+        const transactionData = transactionRes.data;
+        const productData = productRes.data;
+
+        // Map productId → product name
+        const productMap = {};
+        productData.forEach((p) => {
+          productMap[p._id] = p.name;
+        });
+
+        // Enrich transactions with product name and formatted date
+        const enrichedTransactions = transactionData.map((t) => ({
+          ...t,
+          productName: productMap[t.product] || "Unknown",
+          formattedDate: t.date ? new Date(t.date).toLocaleDateString() : "",
+        }));
+
+        setTransactions(enrichedTransactions);
+      } catch {
         setToast({ message: "Failed to load transactions", type: "error" });
       }
     };
 
-    fetchTransactions();
+    fetchData();
   }, []);
 
-  const handleEdit = (id) => {
-    navigate(`/transactions/${id}/edit`);
-  };
+  const handleEdit = (id) => navigate(`/transactions/${id}/edit`);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this transaction?")) return;
-
     try {
       await deleteTransaction(id);
-      setTransactions(prev => prev.filter(t => t.id !== id));
+      setTransactions((prev) => prev.filter((t) => t._id !== id));
       setToast({ message: "Transaction deleted successfully", type: "success" });
-    } catch (error) {
+    } catch {
       setToast({ message: "Failed to delete transaction", type: "error" });
     }
   };
 
   const columns = [
-    { key: "id", label: "ID" },
-    { key: "productName", label: "Product" },
-    { key: "quantity", label: "Quantity" },
-    { key: "totalPrice", label: "Total Price" },
-    { key: "date", label: "Date" },
+    { header: "Product", accessor: "productName" },
+    { header: "Type", accessor: "type" },
+    { header: "Quantity", accessor: "quantity" },
+    { header: "Date", accessor: "formattedDate" },
+    { header: "User", accessor: "user" },
+    { header: "Reference", accessor: "reference" }, // ✅ added reference column
+    {
+      header: "Actions",
+      accessor: "actions",
+      render: (row) => (
+        <div className="flex gap-2">
+          <button
+            className="px-2 py-1 bg-yellow-400 rounded hover:bg-yellow-500"
+            onClick={() => handleEdit(row._id)}
+          >
+            Edit
+          </button>
+          <button
+            className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+            onClick={() => handleDelete(row._id)}
+          >
+            Delete
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -53,17 +90,13 @@ export default function Transactions() {
         <h2 className="text-2xl font-bold">Transactions</h2>
         <button
           onClick={() => navigate("/transactions/new")}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-4 py-2 bg-purple-700 text-white rounded hover:bg-purple-800"
         >
           + Add Transaction
         </button>
       </div>
 
-      <Table
-        columns={columns}
-        data={transactions}
-        actions={{ onEdit: handleEdit, onDelete: handleDelete }}
-      />
+      <Table columns={columns} data={transactions} />
 
       {toast.message && (
         <Toast

@@ -1,4 +1,3 @@
-// src/components/Button.jsx
 export default function Button({
   children,
   onClick,
@@ -6,6 +5,7 @@ export default function Button({
   variant = "primary",
   className = "",
   disabled = false,
+  ...props // ✅ allow extra props
 }) {
   const baseStyles =
     "px-4 py-2 rounded-lg font-medium transition duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
@@ -21,7 +21,9 @@ export default function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
+      aria-disabled={disabled} // ✅ accessibility
       className={`${baseStyles} ${variants[variant]} ${className}`}
+      {...props} // ✅ pass extra props
     >
       {children}
     </button>

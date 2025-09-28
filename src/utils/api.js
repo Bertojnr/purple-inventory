@@ -1,86 +1,23 @@
-// utils/api.js
-
-// --- Mock Data (in-memory) ---
-let suppliers = [
-  { id: 1, name: "Acme Supplies" },
-  { id: 2, name: "Global Traders" },
-  { id: 3, name: "FarmFresh Ltd" },
-];
-
-let products = [
-  { id: 101, name: "Laptop", price: 1200, quantity: 5, supplierId: 1 },
-  { id: 102, name: "Bananas", price: 2, quantity: 100, supplierId: 3 },
-  { id: 103, name: "Office Chair", price: 150, quantity: 20, supplierId: 2 },
-];
+// src/utils/api.js
+import apiClient from "./apiClient";
 
 // --- Supplier APIs ---
-export const getSuppliers = async () => suppliers;
-
-export const getSupplierById = async (id) =>
-  suppliers.find((s) => s.id === Number(id));
-
-export const createSupplier = async (supplier) => {
-  const newSupplier = { id: Date.now(), ...supplier };
-  suppliers.push(newSupplier);
-  return newSupplier;
-};
-
-export const updateSupplier = async (id, updatedSupplier) => {
-  suppliers = suppliers.map((s) =>
-    s.id === Number(id) ? { ...s, ...updatedSupplier } : s
-  );
-  return suppliers.find((s) => s.id === Number(id));
-};
-
-export const deleteSupplier = async (id) => {
-  suppliers = suppliers.filter((s) => s.id !== Number(id));
-};
+export const getSuppliers = () => apiClient.get("/suppliers");
+export const getSupplierById = (id) => apiClient.get(`/suppliers/${id}`);
+export const createSupplier = (supplier) => apiClient.post("/suppliers", supplier);
+export const updateSupplier = (id, supplier) => apiClient.put(`/suppliers/${id}`, supplier);
+export const deleteSupplier = (id) => apiClient.delete(`/suppliers/${id}`);
 
 // --- Product APIs ---
-export const getProducts = async () => products;
-
-export const getProductById = async (id) =>
-  products.find((p) => p.id === Number(id));
-
-export const createProduct = async (product) => {
-  const newProduct = { id: Date.now(), ...product };
-  products.push(newProduct);
-  return newProduct;
-};
-
-export const updateProduct = async (id, updatedProduct) => {
-  products = products.map((p) =>
-    p.id === Number(id) ? { ...p, ...updatedProduct } : p
-  );
-  return products.find((p) => p.id === Number(id));
-};
-
-export const deleteProduct = async (id) => {
-  products = products.filter((p) => p.id !== Number(id));
-};
+export const getProducts = () => apiClient.get("/products");
+export const getProductById = (id) => apiClient.get(`/products/${id}`);
+export const createProduct = (product) => apiClient.post("/products", product);
+export const updateProduct = (id, product) => apiClient.put(`/products/${id}`, product);
+export const deleteProduct = (id) => apiClient.delete(`/products/${id}`);
 
 // --- Transactions ---
-let transactions = [
-  { id: 1, productName: "Laptop", quantity: 2, totalPrice: 2400, date: "2025-09-25" },
-  { id: 2, productName: "Bananas", quantity: 10, totalPrice: 20, date: "2025-09-24" },
-];
-
-export const getTransactions = async () => transactions;
-
-export const getTransactionById = async (id) => transactions.find(t => t.id === Number(id));
-
-export const createTransaction = async (transaction) => {
-  const newTransaction = { id: Date.now(), ...transaction };
-  transactions.push(newTransaction);
-  return newTransaction;
-};
-
-export const updateTransaction = async (id, updatedTransaction) => {
-  transactions = transactions.map(t => t.id === Number(id) ? { ...t, ...updatedTransaction } : t);
-  return transactions.find(t => t.id === Number(id));
-};
-
-export const deleteTransaction = async (id) => {
-  transactions = transactions.filter(t => t.id !== Number(id));
-};
-
+export const getTransactions = () => apiClient.get("/transactions");
+export const getTransactionById = (id) => apiClient.get(`/transactions/${id}`);
+export const createTransaction = (transaction) => apiClient.post("/transactions", transaction);
+export const updateTransaction = (id, transaction) => apiClient.put(`/transactions/${id}`, transaction);
+export const deleteTransaction = (id) => apiClient.delete(`/transactions/${id}`);

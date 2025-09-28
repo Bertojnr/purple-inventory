@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 
 // Layout
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -7,6 +8,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 // Pages
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import Products from "./pages/Products";
 import ProductForm from "./pages/ProductForm";
 import Suppliers from "./pages/Suppliers";
@@ -21,6 +23,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
 
   return (
+    <AuthProvider>
      <Router>
       <Routes>
         {/* Public Login */}
@@ -37,6 +40,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+  path="/profile"
+  element={
+    <ProtectedRoute>
+      <DashboardLayout>
+        <Profile />
+      </DashboardLayout>
+    </ProtectedRoute>
+  }
+/>
 
         {/* Products */}
         <Route
@@ -159,16 +173,19 @@ function App() {
         />
 
         {/* 404 */}
-        <Route
-          path="*"
-          element={
-            <DashboardLayout>
-              <NotFound />
-            </DashboardLayout>
-          }
-        />
+       <Route
+  path="*"
+  element={
+    <ProtectedRoute>
+      <DashboardLayout>
+        <NotFound />
+      </DashboardLayout>
+    </ProtectedRoute>
+  }
+/>
       </Routes>
     </Router>
+    </AuthProvider>
   )
 }
 

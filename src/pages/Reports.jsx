@@ -1,103 +1,168 @@
 // src/pages/Reports.jsx
 import { useEffect, useState } from "react";
-import Table from "../components/Table";
+import {
+  getInventoryReport,
+  getSupplierReport,
+  getTransactionReport,
+  getLowStockReport,
+  getSalesReport,
+} from "../utils/reportApi";
 import Toast from "../components/Toast";
 
-// Mock data (to be replaced by API later)
-const mockLowStock = [
-  { id: 101, name: "Laptop", quantity: 5, supplier: "Acme Supplies" },
-  { id: 103, name: "Office Chair", quantity: 2, supplier: "Global Traders" },
-];
-
-const mockSales = [
-  { id: 1, product: "Laptop", quantitySold: 3, total: 3600 },
-  { id: 2, product: "Bananas", quantitySold: 50, total: 100 },
-];
-
 export default function Reports() {
-  const [lowStock, setLowStock] = useState([]);
-  const [sales, setSales] = useState([]);
-  const [toast, setToast] = useState(null);
+  const [inventory, setInventory] = useState(null);
+  const [suppliers, setSuppliers] = useState(null);
+  const [transactions, setTransactions] = useState(null);
+  const [lowStock, setLowStock] = useState(null);
+  const [sales, setSales] = useState(null);
+  const [toast, setToast] = useState({ message: "", type: "" });
+
+  // Date filters
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   useEffect(() => {
-    setLowStock(mockLowStock);
-    setSales(mockSales);
+    const fetchReports = async () => {
+      try {
+        const [invRes, supRes, tranRes, lowRes, salesRes] = await Promise.all([
+          getInventoryReport(),
+          getSupplierReport(),
+          getTransactionReport(),
+          getLowStockReport(),
+          getSalesReport(), // fetch without filter by default
+        ]);
+
+        setInventory(invRes.data);
+        setSuppliers(supRes.data);
+        setTransactions(tranRes.data);
+        setLowStock(lowRes.data);
+        setSales(salesRes.data);
+      } catch {
+        setToast({ message: "Failed to load reports", type: "error" });
+      }
+    };
+
+    fetchReports();
   }, []);
 
-  const lowStockColumns = [
-    { header: "ID", accessor: "id" },
-    { header: "Product Name", accessor: "name" },
-    { header: "Quantity", accessor: "quantity" },
-    { header: "Supplier", accessor: "supplier" },
-  ];
-
-  const salesColumns = [
-    { header: "ID", accessor: "id" },
-    { header: "Product", accessor: "product" },
-    { header: "Quantity Sold", accessor: "quantitySold" },
-    { header: "Total ($)", accessor: "total" },
-  ];
-
-  // Helper: Convert JSON array to CSV string
-  const convertToCSV = (data) => {
-    if (!data.length) return "";
-    const headers = Object.keys(data[0]).join(",");
-    const rows = data.map((row) => Object.values(row).join(",")).join("\n");
-    return `${headers}\n${rows}`;
-  };
-
-  // Helper: Trigger download
-  const downloadCSV = (data, filename) => {
-    const csv = convertToCSV(data);
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    setToast({ type: "success", message: `${filename} downloaded` });
+  // 🔹 Fetch Sales Report with filters
+  const handleSalesFilter = async () => {
+    try {
+      const { data } = await getSalesReport(fromDate, toDate);
+      setSales(data);
+    } catch {
+      setToast({ message: "Failed to fetch sales report", type: "error" });
+    }
   };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Reports</h1>
+      <h1 className="text-2xl font-bold mb-6">Reports</h1>
 
-      {/* Low-stock Products */}
-      <section className="mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-xl font-semibold">Low-stock Products</h2>
-          <button
-            onClick={() => downloadCSV(lowStock, "low_stock.csv")}
-            className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            Export CSV
-          </button>
+      {/* Inventory Report */}
+      {inventory && (
+        <div className="bg-white p-4 rounded-lg shadow mb-4">
+          <h2 className="font-semibold mb-2">Inventory Report</h2>
+          <p>Total Products: {inventory.totalProducts}</p>
+          <p>Total Stock: {inventory.totalStock}</p>
+          <p>Total Value: ${inventory.totalValue}</p>
         </div>
-        <Table columns={lowStockColumns} data={lowStock} />
-      </section>
+      )}
 
-      {/* Sales Summary */}
-      <section>
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-xl font-semibold">Sales Summary</h2>
-          <button
-            onClick={() => downloadCSV(sales, "sales_summary.csv")}
-            className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            Export CSV
-          </button>
+      {/* Supplier Report */}
+      {suppliers && (
+        <div className="bg-white p-4 rounded-lg shadow mb-4">
+          <h2 className="font-semibold mb-2">Supplier Report</h2>
+          <p>Total Suppliers: {suppliers.totalSuppliers}</p>
+          <h3 className="mt-2 mb-1 font-medium">Top Suppliers</h3>
+          <ul className="list-disc list-inside text-gray-700">
+            {suppliers.topSuppliers.map((s, i) => (
+              <li key={i}>
+                {s.supplier} — {s.count} products
+              </li>
+            ))}
+          </ul>
         </div>
-        <Table columns={salesColumns} data={sales} />
-      </section>
+      )}
 
-      {toast && (
+      {/* Transaction Report */}
+      {transactions && (
+        <div className="bg-white p-4 rounded-lg shadow mb-4">
+          <h2 className="font-semibold mb-2">Transaction Report</h2>
+          <p>Total Transactions: {transactions.totalTransactions}</p>
+          <p>IN: {transactions.inCount}</p>
+          <p>OUT: {transactions.outCount}</p>
+          <h3 className="mt-2 mb-1 font-medium">Recent Transactions</h3>
+          <ul className="list-disc list-inside text-gray-700">
+            {transactions.recentTransactions.map((t) => (
+              <li key={t._id}>
+                {t.type} — {t.quantity} units on{" "}
+                {new Date(t.date).toLocaleDateString()}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Low Stock Report */}
+      {lowStock && (
+        <div className="bg-white p-4 rounded-lg shadow mb-4">
+          <h2 className="font-semibold mb-2">Low Stock Report</h2>
+          <p>Products below reorder level: {lowStock.count}</p>
+          <ul className="list-disc list-inside text-gray-700">
+            {lowStock.lowStock.map((p) => (
+              <li key={p._id}>
+                {p.name} — {p.quantity} units left (Reorder Level:{" "}
+                {p.reorderLevel})
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Sales Report */}
+      {sales && (
+        <div className="bg-white p-4 rounded-lg shadow mb-4">
+          <h2 className="font-semibold mb-2">Sales Report</h2>
+
+          {/* Date Range Filter */}
+          <div className="flex gap-2 mb-4">
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="border rounded p-2"
+            />
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="border rounded p-2"
+            />
+            <button
+              onClick={handleSalesFilter}
+              className="bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded"
+            >
+              Filter
+            </button>
+          </div>
+
+          <ul className="list-disc list-inside text-gray-700">
+            {sales.sales.map((s) => (
+              <li key={s.productId}>
+                {s.name} — {s.totalQuantity} units sold, Revenue: $
+                {s.totalRevenue}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {toast.message && (
         <Toast
-          type={toast.type}
           message={toast.message}
-          onClose={() => setToast(null)}
+          type={toast.type}
+          onClose={() => setToast({ message: "", type: "" })}
         />
       )}
     </div>
